@@ -143,7 +143,7 @@ func TestEnglish(t *testing.T) {
 	expect(tt, "Settings", "Computers", "Add Computer", "This Computer")
 	tt.SetSize(width, 1200) // 下面几组滚在视口外，拉高一并检查
 	tt.Frame()
-	expect(tt, "Inputs", "Shortcuts", "Record Shortcut", "Add to Apple Home", "Waiting to pair", "Language", "System", "English", "Open at Login", "Quit Moniflip")
+	expect(tt, "Inputs", "Shortcuts", "Record Shortcut", "Add to Apple Home", "Show in Home as", "Switches", "TV", "Waiting to pair", "Language", "System", "English", "Open at Login", "Quit Moniflip")
 }
 
 // 语言分段：点哪段就把对应的取值交给 SetLanguage。
@@ -161,6 +161,37 @@ func TestLanguagePicker(t *testing.T) {
 		tt.Frame()
 		if got != c.want || p.Language != c.want {
 			t.Errorf("click %s: SetLanguage(%q), Language %q; want %q", c.seg, got, p.Language, c.want)
+		}
+	}
+}
+
+// Apple 家庭的样子：接了回调时只交给 SetHomeKitAs（已配对时要先确认），没接时视图自己改。
+func TestHomeKitAsPicker(t *testing.T) {
+	p := sample()
+	p.Page = 1
+	p.HomeKit = true
+	got := ""
+	p.SetHomeKitAs = func(as string) { got = as }
+	tt := ui.NewTester(p.view, width, 1200)
+	tt.Frame()
+	if !tt.HasText("每台电脑一个开关，可用于自动化和配件按钮") {
+		t.Fatalf("switch hint missing: %q", tt.Texts())
+	}
+	if err := tt.Click("电视"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if got != "tv" || p.HomeKitAs != "" {
+		t.Fatalf("SetHomeKitAs(%q), HomeKitAs %q", got, p.HomeKitAs)
+	}
+	p.SetHomeKitAs = nil
+	for _, c := range []struct{ seg, want, hint string }{{"电视", "tv", "一台电视，输入源就是各台电脑"}, {"开关", "switch", "每台电脑一个开关，可用于自动化和配件按钮"}} {
+		if err := tt.Click(c.seg); err != nil {
+			t.Fatal(err)
+		}
+		tt.Frame()
+		if p.HomeKitAs != c.want || !tt.HasText(c.hint) {
+			t.Errorf("click %s: HomeKitAs %q, texts %q", c.seg, p.HomeKitAs, tt.Texts())
 		}
 	}
 }

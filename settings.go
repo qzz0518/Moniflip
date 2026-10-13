@@ -456,6 +456,9 @@ func (p *panel) homeSection(c *ui.Context, k palette) {
 			if sw.Changed() && p.SetHomeKit != nil {
 				p.SetHomeKit(p.HomeKit)
 			}
+			if p.HomeKit {
+				p.homeKitAs(c.Key("as"), k)
+			}
 			// 配对码只在等待配对时有用；配好以后收成开关下的一行状态，不再占一大块。
 			if p.HomeKit && !p.HomeKitPaired {
 				p.pairing(c.Key("code"), k)
@@ -463,6 +466,30 @@ func (p *panel) homeSection(c *ui.Context, k palette) {
 		})
 	})
 	*shown = want
+}
+
+// homeKitAs 选在“家庭”里的样子，说明随所选的样子变。
+func (p *panel) homeKitAs(c *ui.Context, k palette) {
+	kinds := []string{"switch", "tv"} // 与 HomeKitAs 的取值对应
+	sel := max(slices.Index(kinds, p.HomeKitAs), 0)
+	ui.Row(c).Height(52).Padding(0, 12).Gap(10).Children(func() {
+		ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
+			ui.Text(c, tr("在“家庭”中显示为", "Show in Home as"))
+			hint := tr("每台电脑一个开关，可用于自动化和配件按钮", "One switch per computer, for automations and buttons")
+			if sel == 1 {
+				hint = tr("一台电视，输入源就是各台电脑", "A TV whose inputs are your computers")
+			}
+			ui.Text(c, hint).FontSize(11.5).TextColor(k.muted).SingleLine()
+		})
+		was := sel
+		if segments(c.Key("pick"), k, &sel, []string{tr("开关", "Switches"), tr("电视", "TV")}, tr("显示为", "Show as")) && sel != was {
+			if p.SetHomeKitAs != nil {
+				p.SetHomeKitAs(kinds[sel])
+			} else {
+				p.HomeKitAs = kinds[sel]
+			}
+		}
+	})
 }
 
 // pairing 照 HomeKit 配对标签的样子：左边二维码，右边房子图标加八位配对码；只在等待配对时出现。
@@ -599,19 +626,29 @@ func (p *panel) generalSection(c *ui.Context, k palette) {
 	})
 }
 
-// languagePicker 是界面语言的分段，样子同卡片上的电脑分段；语言名用它自己的文字写，
-// 看不懂当前界面的人也认得出。各段一样宽、不收窄，两种界面下都写得全。
+// languagePicker 是界面语言的分段。语言名用它自己的文字写，看不懂当前界面的人也认得出。
 func (p *panel) languagePicker(c *ui.Context, k palette) {
 	langs := []string{"", "zh", "en"} // 与 Language 的取值对应
 	sel := max(slices.Index(langs, p.Language), 0)
-	seg := ui.SegmentedBase(c, &sel, len(langs))
-	track := seg.Track.Height(24).Padding(2).Gap(2).Radius(7).Background(k.hover).Label(tr("语言", "Language"))
+	if segments(c, k, &sel, []string{tr("跟随系统", "System"), "简体中文", "English"}, tr("语言", "Language")) && langs[sel] != p.Language {
+		p.Language = langs[sel]
+		if p.SetLanguage != nil {
+			p.SetLanguage(p.Language)
+		}
+	}
+}
+
+// segments 是设置行尾的一组分段，样子同卡片上的电脑分段；各段一样宽、不收窄，两种界面下都写得全。
+// 返回这一帧是否点了某一段（点到的下标写回 *sel）。
+func segments(c *ui.Context, k palette, sel *int, names []string, label string) bool {
+	seg := ui.SegmentedBase(c, sel, len(names))
+	track := seg.Track.Height(24).Padding(2).Gap(2).Radius(7).Background(k.hover).Label(label)
 	track.Children(func() {
-		for j, name := range []string{tr("跟随系统", "System"), "简体中文", "English"} {
+		for j, name := range names {
 			s := seg.Segment(j).Height(20).MinWidth(72).Padding(0, 10).Radius(5).Justify(ui.Center)
 			ink, weight := k.muted, 500
 			switch {
-			case j == sel:
+			case j == *sel:
 				s.Background(k.knob)
 				if !k.dark {
 					s.Shadow(0, 1, 2, 0, ui.RGBA(0, 0, 0, 0.12)).Shadow(0, 0, 0, 0.5, ui.RGBA(0, 0, 0, 0.06))
@@ -626,12 +663,7 @@ func (p *panel) languagePicker(c *ui.Context, k palette) {
 			})
 		}
 	})
-	if track.Changed() && langs[sel] != p.Language {
-		p.Language = langs[sel]
-		if p.SetLanguage != nil {
-			p.SetLanguage(p.Language)
-		}
-	}
+	return track.Changed()
 }
 
 // smallButton 是设置行尾的小按钮。

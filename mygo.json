@@ -1,7 +1,7 @@
 {
   "name": "Moniflip",
   "identifier": "io.github.qzz0518.moniflip",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "copyright": "© 2026 qzz0518",
   "icon": "assets/icon.png",
   "out": "build",

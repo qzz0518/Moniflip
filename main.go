@@ -90,14 +90,15 @@ type app struct {
 	p             panel
 	win           *mygo.Window
 	tray          *mygo.Tray
-	hotkeys       []string     // 已注册的快捷键
-	settingsWin   *mygo.Window // 独立的设置窗口，第一次打开时创建
-	settingsEcho  bool         // 见 fitSettings
-	hk            *homekit     // Apple 家庭配件；未开启为 nil
-	hotkeysPaused bool         // 设置页打开时暂停全局快捷键
-	pending       func()       // 检测进行中收到的链接，检测完再执行
-	redetect      bool         // 检测进行中又有人要求检测
-	switchGen     int          // 每次切换加一，过期的跳回提示作废
+	hotkeys       []string      // 已注册的快捷键
+	settingsWin   *mygo.Window  // 独立的设置窗口，第一次打开时创建
+	settingsEcho  bool          // 见 fitSettings
+	hk            *homekit      // Apple 家庭配件；未开启为 nil
+	hkDone        chan struct{} // 最近启动的配件服务停下后关闭
+	hotkeysPaused bool          // 设置页打开时暂停全局快捷键
+	pending       func()        // 检测进行中收到的链接，检测完再执行
+	redetect      bool          // 检测进行中又有人要求检测
+	switchGen     int           // 每次切换加一，过期的跳回提示作废
 	detecting     bool
 	quitting      bool
 }
@@ -114,6 +115,7 @@ func (a *app) ready() {
 	a.p.SetLanguage = a.setLanguage
 	a.p.SetHotkey = a.setHotkey
 	a.p.SetHomeKit = a.setHomeKit
+	a.p.SetHomeKitAs = a.setHomeKitAs
 	a.p.RenameComputer = func(i int, name string) { a.edit(a.cfg.renameComputer(i, strings.TrimSpace(name))) }
 	a.p.AddComputer = func() { a.cfg.addComputer(); a.edit(nil) }
 	a.p.RemoveComputer = func(i int) { a.edit(a.cfg.removeComputer(i)) }
@@ -175,12 +177,21 @@ func (a *app) ready() {
 	if a.cfg.HomeKit {
 		a.startHomeKit()
 	}
-	// 等待配对期间定时刷新配对状态
+	// 等待配对期间定时刷新配对状态。配好以后每 30 秒回读一次输入：显示器在别处切走（显示器按键、另一台电脑）时
+	// 未必有事件，“家庭”里的状态就过期了，而 hap 会丢掉与当前值相同的写入，按钮就按不动了。
 	go func() {
-		for range time.Tick(3 * time.Second) {
+		for n := 1; ; n++ {
+			time.Sleep(3 * time.Second)
 			a.win.Update(func() {
-				if a.hk != nil && a.p.HomeKitPaired != a.hk.server.IsPaired() {
+				if a.hk == nil {
+					return
+				}
+				paired := a.hk.server.IsPaired()
+				if a.p.HomeKitPaired != paired {
 					a.refreshPanel()
+				}
+				if paired && n%10 == 0 {
+					a.detect(true)
 				}
 			})
 		}
@@ -436,7 +447,7 @@ func (a *app) detect(silent bool) {
 func (a *app) refreshPanel() {
 	cfg := a.cfg
 	a.p.Computers, a.p.Self = slices.Clone(cfg.Computers), cfg.Self
-	a.p.HomeKit, a.p.Language = cfg.HomeKit, cfg.Language
+	a.p.HomeKit, a.p.HomeKitAs, a.p.Language = cfg.HomeKit, cfg.HomeKitAs, cfg.Language
 	a.p.Hotkeys = make([]string, len(cfg.Computers))
 	for i, name := range cfg.Computers {
 		a.p.Hotkeys[i] = cfg.Hotkeys[name]
@@ -706,6 +717,43 @@ func (a *app) setHomeKit(on bool) {
 		unpairHomeKit()
 	}
 	a.refreshPanel()
+}
+
+// setHomeKitAs 换在“家庭”里的样子。配件的类别在配对时定下，换样子就是换一台新配件：清掉原来的配对和身份
+// 重新开始，要在“家庭”里删掉原来的 Moniflip 再扫码添加，原来的场景和自动化也要重设，所以已配对时先确认。
+func (a *app) setHomeKitAs(as string) {
+	if as == a.cfg.HomeKitAs {
+		return
+	}
+	apply := func() {
+		a.cfg.HomeKitAs = as
+		a.cfg.save()
+		if a.hk != nil {
+			a.stopHomeKit()
+			unpairHomeKit()
+			a.startHomeKit()
+		}
+		a.refreshPanel()
+	}
+	if a.hk == nil || !a.hk.server.IsPaired() {
+		apply()
+		return
+	}
+	go func() {
+		r, err := mygo.Dialog.Message(mygo.MessageOptions{
+			Parent:  a.settingsWin,
+			Type:    mygo.MessageWarning,
+			Message: tr("需要在“家庭”里重新添加 Moniflip", "You’ll need to add Moniflip to Home again"),
+			Detail: tr("换样子后 Moniflip 是一台新配件：先在“家庭”App 里删掉原来的 Moniflip，再扫码添加。原来的场景和自动化需要重新设置。",
+				"After the change, Moniflip is a new accessory: remove the old Moniflip in the Home app, then scan the code to add it again. Scenes and automations need to be set up again."),
+			Buttons:       []string{tr("更改", "Change"), tr("取消", "Cancel")},
+			DefaultButton: 1,
+			CancelButton:  1,
+		})
+		if err == nil && r.Button == 0 {
+			a.win.Update(apply)
+		}
+	}()
 }
 
 // openURL 处理 moniflip://switch?to=PC[&monitor=名称或 ID 片段]。

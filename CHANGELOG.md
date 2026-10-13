@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.1.1
+
+### 中文
+
+- Apple 家庭可以选择显示为 **开关**（新的默认）或 **电视**：在 设置 → Apple 家庭 → 在“家庭”中显示为 里选择。开关是每台电脑一个，打开哪个就切到哪台，场景、自动化和配件按钮都能用；只有两台电脑时，关掉一个也会切到另一台。
+- 在 0.1.0 里已经打开 Apple 家庭的，升级后仍是电视。改成开关后，要在“家庭” App 里删掉原来的 Moniflip 再重新添加。
+- “家庭”里的状态每 30 秒与显示器同步一次：用显示器按键或另一台电脑切换后，“家庭”最多 30 秒就会跟上，按钮和自动化不会一直按不动。
+- 修复：改了电脑列表、关掉再打开 Apple 家庭后，“家庭”有时很久都找不到 Moniflip。
+
+### English
+
+- Apple Home: choose to show Moniflip as **Switches** (the new default) or a **TV**, in Settings → Apple Home → Show in Home as. Switches give each computer its own switch — turn one on to flip the monitors to that computer — and work in scenes, automations and with accessory buttons. With exactly two computers, turning a switch off also flips to the other one.
+- If Apple Home was on in 0.1.0, Moniflip stays a TV after the update. To use switches, change it in Settings, then remove the old Moniflip in the Home app and add it again.
+- Apple Home re-reads the monitors every 30 seconds: after a switch made with the monitor's buttons or from the other computer, Home catches up within 30 seconds, so buttons and automations don't stay stuck.
+- Fixed: after changing the computers or turning Apple Home off and on, the Home app could take a long time to find Moniflip.
+
 ## 0.1.0
 
 ### 中文

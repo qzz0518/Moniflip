@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -85,5 +87,28 @@ func TestPickLang(t *testing.T) {
 		if got := pickLang(c.setting, c.locale); got != c.want {
 			t.Errorf("pickLang(%q, %q) = %q, want %q", c.setting, c.locale, got, c.want)
 		}
+	}
+}
+
+// 0.1.0 的设置没有 homekitAs：已经打开 Apple 家庭的照旧当电视，其余用默认的开关；写明了的照写。
+func TestHomeKitAsMigration(t *testing.T) {
+	dir := t.TempDir()
+	for _, c := range []struct{ json, want string }{
+		{`{"version":2,"computers":["Mac","PC"],"homekit":true}`, "tv"},
+		{`{"version":2,"computers":["Mac","PC"]}`, "switch"},
+		{`{"version":2,"computers":["Mac","PC"],"homekit":true,"homekitAs":"switch"}`, "switch"},
+		{`{"version":2,"computers":["Mac","PC"],"homekitAs":"tv"}`, "tv"},
+		{`not json`, "switch"},
+	} {
+		path := filepath.Join(dir, "config.json")
+		if err := os.WriteFile(path, []byte(c.json), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		if got := readConfig(path, filepath.Join(dir, "none.json")).HomeKitAs; got != c.want {
+			t.Errorf("%s: HomeKitAs %q, want %q", c.json, got, c.want)
+		}
+	}
+	if got := readConfig(filepath.Join(dir, "missing.json"), filepath.Join(dir, "none.json")).HomeKitAs; got != "switch" {
+		t.Errorf("new install: HomeKitAs %q", got)
 	}
 }

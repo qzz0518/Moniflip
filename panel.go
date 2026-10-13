@@ -33,6 +33,7 @@ type panel struct {
 	Language      string   // 界面语言："" 跟随系统，"zh"、"en"
 	Hotkeys       []string // 与 Computers 对应的全局快捷键（mygo accelerator 语法，如 "Ctrl+Alt+Cmd+P"；"" 无）
 	HomeKit       bool     // 作为 Apple 家庭配件
+	HomeKitAs     string   // 在“家庭”里的样子："switch" 每台电脑一个开关（空也当它），"tv" 一台电视
 	HomeKitCode   string   // 配对码，如 "123-45-678"（HomeKit 打开时显示）
 	HomeKitSetup  string   // 配对二维码的内容（X-HM://…），“家庭”App 扫它添加
 	HomeKitPaired bool
@@ -48,6 +49,7 @@ type panel struct {
 	SetLanguage     func(language string)    // 改界面语言（取值同 Language），立即生效
 	SetHotkey       func(to int, acc string) // acc 为 "" 表示清除
 	SetHomeKit      func(on bool)
+	SetHomeKitAs    func(as string) // 换样子；已配对时先确认（要重新添加），所以视图不直接改 HomeKitAs
 	RenameComputer  func(i int, name string)
 	AddComputer     func()
 	RemoveComputer  func(i int)

@@ -16,7 +16,7 @@ When several computers share the same monitors, Moniflip shows — in the macOS 
 - **Flip everything at once**: the main button moves the checked monitors to another computer; each computer can also get a global shortcut.
 - **Install on one side, switch both ways**: many monitors accept commands from a computer they are not showing, so one copy can switch away and back. If yours don't, install Moniflip on both computers.
 - **Verified switching**: Moniflip reads the input back after switching and tells you when a monitor bounced back to its previous input.
-- **Apple Home**: scan a code to add it to the Home app as a TV whose inputs are your computers — switch with Siri, scenes and automations.
+- **Apple Home**: scan a code to add it to the Home app as one switch per computer (or as a TV) — switch with Siri, scenes, automations and accessory buttons.
 - **Fits your wiring**: name, add and remove computers; set which input each computer uses on every monitor, from the inputs the monitor reports. Identical monitors are told apart by serial number on macOS and by connection port on Windows (redo the wiring after moving a monitor to another port).
 - **Command line and links**: `moniflip switch PC`, `moniflip://switch?to=PC` — for Stream Deck, Shortcuts and scripts.
 - English and Chinese, signed auto-updates. No account, no data collection.
@@ -51,10 +51,14 @@ The interface follows the system language (on Windows, the display language). To
 ### Apple Home
 
 1. Settings → **Apple Home** → turn on **Add to Apple Home**. A setup QR code and an 8-digit setup code appear below.
-2. In the Home app on your iPhone, tap **Add Accessory** and scan the QR code; or tap **More options…**, pick Moniflip and enter the setup code.
-3. Moniflip appears as a TV: choose a computer as its input to switch. You can also ask Siri, for example “Switch Moniflip to PC”.
+2. Under **Show in Home as**, pick how Moniflip appears:
+   - **Switches** (default): one switch per computer; turning one on flips the monitors to that computer. Works in scenes, automations and with accessory buttons — for example, a single press turns on Mac and a double press turns on PC. With exactly two computers, turning a switch off also flips to the other computer. The Home app groups the switches into one tile; choose **Show as Separate Tiles** in the accessory’s settings to get one tile per computer.
+   - **TV**: Moniflip is a TV; choose a computer as its input to switch, or ask Siri, for example “Switch Moniflip to PC”. Scenes and automations can only turn a TV on or off, not choose its input.
+3. In the Home app on your iPhone, tap **Add Accessory** and scan the QR code; or tap **More options…**, pick Moniflip and enter the setup code.
 
-The computer running Moniflip must stay awake and be on the same network as your iPhone (or home hub). The first time, macOS asks whether Moniflip may access the local network — allow it; on Windows, allow Moniflip through the firewall prompt (Private networks, plus Public if your network is set to Public). Turning **Add to Apple Home** off removes the pairing; turning it back on generates a new setup code, and you add Moniflip in the Home app again.
+Changing **Show in Home as** after adding makes Moniflip a new accessory: remove the old Moniflip in the Home app and add it again, then set up your scenes and automations again.
+
+The computer running Moniflip must stay awake and be on the same network as your iPhone (or home hub). The first time, macOS asks whether Moniflip may access the local network — allow it; on Windows, allow Moniflip through the firewall prompt (Private networks, plus Public if your network is set to Public). Turning **Add to Apple Home** off removes the pairing; turning it back on generates a new setup code: remove the old Moniflip in the Home app and add it again.
 
 ## Command line and links
 

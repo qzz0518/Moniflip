@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -16,16 +17,18 @@ const configVersion = 2
 // config 存在用户数据目录的 config.json，只在主线程读写。
 type config struct {
 	Version   int                 `json:"version"`
-	Computers []string            `json:"computers"`          // 共用这些显示器的电脑，如 ["Mac", "PC"]
-	Self      int                 `json:"self"`               // 本机是 Computers 的第几个
-	Monitors  map[string]*monitor `json:"monitors"`           // 键是显示器 ID
-	Hotkeys   map[string]string   `json:"hotkeys,omitempty"`  // 电脑名 → 全局快捷键
-	HomeKit   bool                `json:"homekit,omitempty"`  // 作为 Apple 家庭配件
-	InputIDs  map[string]int      `json:"inputIds,omitempty"` // 电脑名 → Apple 家庭里输入源的编号，只增不复用
-	Language  string              `json:"language,omitempty"` // "zh"、"en"；空为跟随系统
+	Computers []string            `json:"computers"`           // 共用这些显示器的电脑，如 ["Mac", "PC"]
+	Self      int                 `json:"self"`                // 本机是 Computers 的第几个
+	Monitors  map[string]*monitor `json:"monitors"`            // 键是显示器 ID
+	Hotkeys   map[string]string   `json:"hotkeys,omitempty"`   // 电脑名 → 全局快捷键
+	HomeKit   bool                `json:"homekit,omitempty"`   // 作为 Apple 家庭配件
+	HomeKitAs string              `json:"homekitAs,omitempty"` // 在 Apple 家庭里的样子："switch" 每台电脑一个开关，"tv" 一台电视
+	InputIDs  map[string]int      `json:"inputIds,omitempty"`  // 电脑名 → Apple 家庭里的编号（输入源、开关），只增不复用
+	Language  string              `json:"language,omitempty"`  // "zh"、"en"；空为跟随系统
 
 	path   string
-	broken bool // 文件存在但读不懂：不覆盖它，免得毁掉用户的设置
+	broken bool   // 文件存在但读不懂：不覆盖它，免得毁掉用户的设置
+	saved  []byte // 上次写下的内容，没变就不再写
 }
 
 // monitor 是一台显示器的设置。
@@ -38,7 +41,7 @@ type monitor struct {
 }
 
 func defaultConfig() *config {
-	cfg := &config{Version: configVersion, Computers: []string{"Mac", "PC"}, Monitors: map[string]*monitor{}}
+	cfg := &config{Version: configVersion, Computers: []string{"Mac", "PC"}, Monitors: map[string]*monitor{}, HomeKitAs: "switch"}
 	if !onMac {
 		cfg.Self = 1
 	}
@@ -51,16 +54,21 @@ func loadConfig() *config {
 		logf("user data directory: %v", err)
 		return defaultConfig()
 	}
-	path := filepath.Join(dir, "config.json")
+	return readConfig(filepath.Join(dir, "config.json"), filepath.Join(filepath.Dir(dir), "DellSwitch", "config.json"))
+}
+
+// readConfig 读 path 处的设置；文件不存在时迁移 legacy 处改名前的设置。
+func readConfig(path, legacy string) *config {
 	b, err := os.ReadFile(path)
 	if os.IsNotExist(err) {
-		cfg := migrateDellSwitch(filepath.Join(filepath.Dir(dir), "DellSwitch", "config.json"))
+		cfg := migrateDellSwitch(legacy)
 		cfg.path = path
 		return cfg
 	}
 	cfg := defaultConfig()
 	cfg.path = path
 	if err == nil {
+		cfg.HomeKitAs = "" // 0.1.0 的设置里没有这一项，见下
 		err = json.Unmarshal(b, cfg)
 	}
 	if err != nil || cfg.Version > configVersion || len(cfg.Computers) < 2 {
@@ -79,6 +87,13 @@ func loadConfig() *config {
 		}
 	}
 	cfg.Self = min(max(cfg.Self, 0), len(cfg.Computers)-1)
+	if cfg.HomeKitAs == "" {
+		// 0.1.0 只有电视：已经打开 Apple 家庭的照旧当电视，免得配好的配件换了样子；其余用默认的开关
+		cfg.HomeKitAs = "switch"
+		if cfg.HomeKit {
+			cfg.HomeKitAs = "tv"
+		}
+	}
 	return cfg
 }
 
@@ -118,6 +133,9 @@ func (cfg *config) save() {
 		return
 	}
 	b, err := json.MarshalIndent(cfg, "", "  ")
+	if err == nil && bytes.Equal(b, cfg.saved) {
+		return // 定时检测每次都会存一下
+	}
 	if err == nil {
 		tmp := cfg.path + ".tmp"
 		if err = os.WriteFile(tmp, b, 0o644); err == nil {
@@ -126,7 +144,9 @@ func (cfg *config) save() {
 	}
 	if err != nil {
 		logf("save settings: %v", err)
+		return
 	}
+	cfg.saved = b
 }
 
 // adopt 返回显示器的设置，没有就新建：先认领同名的旧版条目，否则只预填本机接口（当前输入），默认参与切换。
@@ -191,7 +211,7 @@ func (cfg *config) renameComputer(i int, name string) error {
 	return nil
 }
 
-// inputID 是电脑在 Apple 家庭里的输入源编号：场景和自动化按编号记住输入源，
+// inputID 是电脑在 Apple 家庭里的编号，定了输入源的 Identifier 和开关的 IID：场景和自动化按它们记住电脑，
 // 所以电脑改名、删掉别的电脑后编号都不变；删掉的编号也不再给别人用（不从 InputIDs 里删）。
 func (cfg *config) inputID(name string) int {
 	if cfg.InputIDs == nil {
