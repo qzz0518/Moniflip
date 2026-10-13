@@ -143,7 +143,7 @@ func TestEnglish(t *testing.T) {
 	expect(tt, "Settings", "Computers", "Add Computer", "This Computer")
 	tt.SetSize(width, 1200) // 下面几组滚在视口外，拉高一并检查
 	tt.Frame()
-	expect(tt, "Inputs", "Shortcuts", "Record Shortcut", "Add to Apple Home", "Show in Home as", "Switches", "TV", "Waiting to pair", "Language", "System", "English", "Open at Login", "Quit Moniflip")
+	expect(tt, "Inputs", "Shortcuts", "Record Shortcut", "Add to Apple Home", "Show in Home as", "Switches", "TV", "Waiting to pair", "Language", "System", "English", "Open at Login", "Author", "X @zerah_eth", "GitHub", "Quit Moniflip")
 }
 
 // 语言分段：点哪段就把对应的取值交给 SetLanguage。

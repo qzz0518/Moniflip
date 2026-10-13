@@ -121,6 +121,11 @@ func (a *app) ready() {
 	a.p.RemoveComputer = func(i int) { a.edit(a.cfg.removeComputer(i)) }
 	a.p.CheckUpdate = updater.CheckForUpdates
 	a.p.CopyDiagnostics = a.copyDiagnostics
+	a.p.Open = func(url string) {
+		if err := mygo.Shell.OpenExternal(url); err != nil {
+			logf("open %s: %v", url, err)
+		}
+	}
 	a.p.OpenSettings = a.openSettings
 	a.p.Quit = mygo.App.Quit
 

@@ -587,6 +587,11 @@ func (p *panel) generalSection(c *ui.Context, k palette) {
 				}
 			})
 		})
+		item(c.Key("author")).Children(func() {
+			ui.Text(c, tr("作者", "Author")).Grow(1)
+			p.link(c.Key("x"), k, "X @zerah_eth", "https://x.com/zerah_eth")
+			p.link(c.Key("github"), k, "GitHub", "https://github.com/qzz0518/Moniflip")
+		})
 		diag := item(c.Key("diag")).Height(48)
 		copied := ui.Local(diag, "copied", func() bool { return false })
 		diag.Children(func() {
@@ -664,6 +669,20 @@ func segments(c *ui.Context, k palette, sel *int, names []string, label string) 
 		}
 	})
 	return track.Changed()
+}
+
+// link 是设置行尾的外链小按钮，点了用浏览器打开 url。
+func (p *panel) link(c *ui.Context, k palette, text, url string) {
+	b := smallButton(c, k).Tooltip(url)
+	b.Children(func() {
+		ui.Text(c, text)
+		ui.Icon(c, iconLink).FontSize(11).TextColor(k.muted)
+	})
+	b.OnClick(func() {
+		if p.Open != nil {
+			p.Open(url)
+		}
+	})
 }
 
 // smallButton 是设置行尾的小按钮。

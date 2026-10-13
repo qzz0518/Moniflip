@@ -27,6 +27,7 @@ func wire(p *panel) *[]string {
 	p.RemoveComputer = func(i int) { rec("RemoveComputer(%d)", i) }
 	p.CheckUpdate = func() { rec("CheckUpdate") }
 	p.CopyDiagnostics = func(done func()) { rec("CopyDiagnostics"); done() }
+	p.Open = func(url string) { rec("Open(%s)", url) }
 	p.Quit = func() { rec("Quit") }
 	return log
 }
@@ -190,6 +191,10 @@ func clickThrough(t *testing.T, wired bool) {
 	w.expect("SetLogin(true)")
 	w.click("检查更新")
 	w.expect("CheckUpdate")
+	w.click("X @zerah_eth")
+	w.expect("Open(https://x.com/zerah_eth)")
+	w.click("GitHub")
+	w.expect("Open(https://github.com/qzz0518/Moniflip)")
 	w.click("复制诊断信息")
 	w.expect("CopyDiagnostics")
 	if wired && !tt.HasText("已复制") {

@@ -56,5 +56,6 @@ type panel struct {
 	CheckUpdate     func()
 	OpenSettings    func()            // 打开独立的设置窗口；为 nil 时（测试、设计稿）在面板里翻到设置页
 	CopyDiagnostics func(done func()) // 复制诊断信息到剪贴板（反馈兼容性问题用）
+	Open            func(url string)  // 用浏览器打开链接
 	Quit            func()
 }

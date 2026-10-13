@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.2
+
+### 中文
+
+- 设置 → 通用 里加上作者的 X（@zerah_eth）和项目的 GitHub 链接。
+
+### English
+
+- Settings → General now links to the author on X (@zerah_eth) and to the project on GitHub.
+
 ## 0.1.1
 
 ### 中文
