@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: macos-latest
+    env:
+      CGO_ENABLED: "0" # as mygo builds the app
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - name: gofmt
+        run: |
+          unformatted="$(gofmt -l .)"
+          if [ -n "$unformatted" ]; then
+            echo "These files need gofmt -w:"
+            echo "$unformatted"
+            exit 1
+          fi
+      - name: go vet (macOS arm64)
+        run: GOOS=darwin GOARCH=arm64 go vet ./...
+      - name: go vet (Windows amd64)
+        run: GOOS=windows GOARCH=amd64 go vet ./...
+      - name: go test
+        run: go test ./...
+      - name: go mod tidy
+        run: go mod tidy -diff
+      - name: third-party notices
+        run: |
+          # Every module linked into either app is credited, as scripts/release.sh checks.
+          uncredited="$(for p in darwin/arm64 windows/amd64; do
+            GOOS="${p%/*}" GOARCH="${p#*/}" go list -deps -f '{{with .Module}}{{if not .Main}}{{.Path}}{{end}}{{end}}' .
+          done | sort -u | while read -r module; do
+            [ -z "$module" ] || grep -Fq "$module" THIRD-PARTY-NOTICES.md || echo "$module"
+          done)"
+          if [ -n "$uncredited" ]; then
+            echo "THIRD-PARTY-NOTICES.md does not credit:"
+            echo "$uncredited"
+            exit 1
+          fi

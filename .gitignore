@@ -1,0 +1,15 @@
+build/
+.DS_Store
+mygo-update.key
+/.mygo/
+mygo_windows_*.syso
+/moniflip
+/moniflip.exe
+/out/
+*.p12
+*.pfx
+*.p8
+*.cer
+*.dmg
+*.log
+.env

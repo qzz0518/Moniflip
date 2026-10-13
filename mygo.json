@@ -1,0 +1,33 @@
+{
+  "name": "Moniflip",
+  "identifier": "io.github.qzz0518.moniflip",
+  "version": "0.1.0",
+  "copyright": "© 2026 qzz0518",
+  "icon": "assets/icon.png",
+  "out": "build",
+  "urlSchemes": [
+    "moniflip"
+  ],
+  "resources": [
+    "LICENSE",
+    "THIRD-PARTY-NOTICES.md"
+  ],
+  "updates": {
+    "publicKey": "A1y2AaTwBrFFbXO3VOBAjWFuYyjbStZ2Kzo7X3O1w8s=",
+    "github": "qzz0518/Moniflip"
+  },
+  "macos": {
+    "minimumSystemVersion": "13.0",
+    "notarize": {
+      "keychainProfile": "Charker-Notary"
+    },
+    "infoPlist": {
+      "CFBundleDevelopmentRegion": "en",
+      "LSUIElement": true,
+      "NSLocalNetworkUsageDescription": "Moniflip uses the local network only for Apple Home (HomeKit), so your iPhone can switch monitors.",
+      "NSBonjourServices": [
+        "_hap._tcp"
+      ]
+    }
+  }
+}

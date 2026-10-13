@@ -1,0 +1,26 @@
+name: Feature request
+description: Suggest an improvement.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: English or Chinese is fine. 中英文均可。
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What you are trying to do and what gets in the way.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: How Moniflip could solve it. Alternatives you considered are welcome too.
+  - type: checkboxes
+    id: vcp
+    attributes:
+      label: DDC/CI
+      options:
+        - label: I understand Moniflip only writes the input source (VCP 0x60); features that write other VCP codes need discussion first (see CONTRIBUTING.md).
+          required: true

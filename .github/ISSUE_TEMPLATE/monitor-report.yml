@@ -1,0 +1,65 @@
+name: Monitor report
+description: Tell us how Moniflip works with your monitor, whether it works or not.
+title: "[Monitor] "
+labels: ["compatibility"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Reports of monitors that work are as useful as those that don't. English or Chinese is fine. 中英文均可。
+  - type: input
+    id: monitor
+    attributes:
+      label: Monitor model
+      placeholder: Dell U2723QX
+    validations:
+      required: true
+  - type: textarea
+    id: connection
+    attributes:
+      label: Connection path
+      description: For each computer, how it reaches this monitor (USB-C, DisplayPort, HDMI, Thunderbolt, dock or hub model, adapters).
+      placeholder: |
+        Mac: USB-C cable → monitor USB-C port
+        PC: DisplayPort → monitor DP port
+    validations:
+      required: true
+  - type: textarea
+    id: computers
+    attributes:
+      label: Computers, OS and chip/GPU
+      description: Mark which one runs Moniflip.
+      placeholder: |
+        Mac (runs Moniflip): macOS 15.6, M2 Pro
+        PC: Windows 11 24H2, NVIDIA RTX 4070
+    validations:
+      required: true
+  - type: dropdown
+    id: result
+    attributes:
+      label: Result
+      options:
+        - Works both ways
+        - Works in one direction only
+        - Switches, then bounces back to the previous input
+        - Shows the wrong current computer
+        - Nothing happens
+        - Monitor not detected
+        - Other (describe below)
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected and what you saw.
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics
+      description: "In Moniflip, open Settings → General → Diagnostics → Copy (设置 → 通用 → 诊断信息 → 复制), or run `moniflip diagnose`, and paste the result here. Monitor serial numbers are already masked."
+      render: text
+    validations:
+      required: true
