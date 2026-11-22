@@ -256,6 +256,7 @@ func detectDisplays(known map[string][]code) []display {
 	return out
 }
 
+// withHandles 按显示器 ID 提供物理句柄，句柄值可能为 0，是否存在以 map 查询结果为准
 func withHandles(fn func(hs map[string]uintptr)) {
 	ps := physicalMonitors()
 	defer release(ps)
@@ -269,7 +270,7 @@ func withHandles(fn func(hs map[string]uintptr)) {
 func setInputs(targets map[string]code) (missing, failed []string) {
 	withHandles(func(hs map[string]uintptr) {
 		for id := range targets {
-			if hs[id] == 0 {
+			if _, ok := hs[id]; !ok {
 				missing = append(missing, id)
 			}
 		}
@@ -295,11 +296,12 @@ func setInputs(targets map[string]code) (missing, failed []string) {
 	return missing, failed
 }
 
+// readInputs 读取已枚举到的显示器，包括物理句柄值为 0 的显示器
 func readInputs(ids []string) map[string]code {
 	out := map[string]code{}
 	withHandles(func(hs map[string]uintptr) {
 		for _, id := range ids {
-			if h := hs[id]; h != 0 {
+			if h, ok := hs[id]; ok {
 				out[id] = currentInput(h)
 			}
 		}
