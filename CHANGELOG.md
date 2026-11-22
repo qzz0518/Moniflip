@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.3
+
+### 中文
+
+- 修复：在 Windows 上，部分显示器无法切换输入、也读不到当前输入（感谢 @viewhang）。
+
+### English
+
+- Fixed: on Windows, some monitors could not be switched and their current input could not be read (thanks @viewhang).
+
 ## 0.1.2
 
 ### 中文
